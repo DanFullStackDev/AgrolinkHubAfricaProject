@@ -12,6 +12,7 @@ import {
   produceSchema,
   updateProduceSchema,
 } from '../validations/produceValidation.js'; // 2. Import
+import upload from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
@@ -23,6 +24,7 @@ router.post(
   protect,
   authorize('Farmer', 'Admin'),
   validateRequest(produceSchema), // 3. Add middleware
+  upload.array('images', 5),
   createProduce
 );
 

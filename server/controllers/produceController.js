@@ -44,10 +44,10 @@ const getProduceById = async (req, res) => {
 // @access  Private/Farmer
 const createProduce = async (req, res) => {
   try {
+    // Data (except images) now comes from req.body
     const {
       title,
       description,
-      images,
       price,
       quantity,
       unit,
@@ -55,19 +55,23 @@ const createProduce = async (req, res) => {
       location,
     } = req.body;
 
-    // We get req.user from the 'protect' middleware
-    const farmerId = req.user._id;
+    // Images come from req.files (thanks to multer-cloudinary)
+    const files = req.files || [];
+    const images = files.map((file) => file.path || file.location || file.secure_url).filter(Boolean);
 
-    // Basic validation
+    // Basic validation (since Joi is removed from the route)
+    if (!title || !description || !price || !quantity || !unit || !category || !location) {
+      return res.status(400).json({ message: 'All fields are required.' });
+    }
     if (!images || images.length === 0) {
-        return res.status(400).json({ message: 'Please add at least one image URL.' });
+      return res.status(400).json({ message: 'At least one image is required.' });
     }
 
     const produce = new Produce({
-      farmerId,
+      farmerId: req.user._id,
       title,
       description,
-      images, // For now, we assume images is an array of URLs. We will integrate file uploads later.
+      images, // Save the Cloudinary URLs
       price,
       quantity,
       unit,
