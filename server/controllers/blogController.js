@@ -44,8 +44,9 @@ const getBlogById = async (req, res) => {
 // @access  Private/Expert or Admin
 const createBlog = async (req, res) => {
   try {
-    const { title, content, images, categories } = req.body;
-
+    const { title, content, categories } = req.body;
+const files = req.files || [];
+    const images = files.map((file) => file.path || file.secure_url).filter(Boolean);
     const blog = new Blog({
       title,
       content,

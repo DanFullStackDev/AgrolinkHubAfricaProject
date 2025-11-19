@@ -5,34 +5,35 @@ import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import produceRoutes from './routes/produceRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
-import blogRoutes from './routes/blogRoutes.js';
-
-
-// Load env vars
+import categoryRoutes from './routes/categoryRoutes.js'; // Import Categories
+import blogRoutes from './routes/blogRoutes.js';         // Import Blogs
+import userRoutes from './routes/userRoutes.js'; // <--- Import
 dotenv.config();
-
-// Connect to database
 connectDB();
 
 const app = express();
 
-// Enable CORS
 app.use(cors());
-
-// Body parser middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Mount routes
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/produce', produceRoutes);
 app.use('/api/orders', orderRoutes);
-app.use('/api/blogs', blogRoutes);
+app.use('/api/categories', categoryRoutes); // Mount Categories
+app.use('/api/blogs', blogRoutes);          // Mount Blogs
 
-// --- (Future routes will go here) ---
-// app.use('/api/produce', produceRoutes);
-// app.use('/api/orders', orderRoutes);
-// app.use('/api/blogs', blogRoutes);
+// Error Handler
+app.use((err, req, res, next) => {
+  console.error("🔥 SERVER ERROR:", JSON.stringify(err, null, 2));
+  res.status(500).json({ 
+    message: "Server Error", 
+    error: err.message || "Unknown Error",
+    details: err 
+  });
+});
 
 const PORT = process.env.PORT || 5000;
 

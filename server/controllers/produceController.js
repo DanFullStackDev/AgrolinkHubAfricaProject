@@ -6,10 +6,27 @@ import mongoose from 'mongoose';
 // @access  Public
 const getProduce = async (req, res) => {
   try {
-    // Add logic for search, filters, pagination here later
-    const produce = await Produce.find({})
+    const { keyword, category, location } = req.query;
+    let query = {};
+
+    // Search by Title or Description
+    if (keyword) {
+      query.$or = [
+        { title: { $regex: keyword, $options: 'i' } },
+        { description: { $regex: keyword, $options: 'i' } },
+      ];
+    }
+
+    // Filter by Category
+    if (category) query.category = category;
+
+    // Filter by Location
+    if (location) query.location = { $regex: location, $options: 'i' };
+
+    const produce = await Produce.find(query)
       .populate('farmerId', 'name location')
       .sort({ createdAt: -1 });
+      
     res.json(produce);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -20,23 +37,12 @@ const getProduce = async (req, res) => {
 // @route   GET /api/produce/:id
 // @access  Public
 const getProduceById = async (req, res) => {
-  try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ message: 'Invalid Produce ID' });
-    }
-    const produce = await Produce.findById(req.params.id).populate(
-      'farmerId',
-      'name location ratings'
-    );
-
-    if (produce) {
-      res.json(produce);
-    } else {
-      res.status(404).json({ message: 'Produce not found' });
-    }
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+  // ... existing validation ...
+  const produce = await Produce.findById(req.params.id).populate(
+    'farmerId',
+    'name location rating numReviews' // <--- MAKE SURE THESE FIELDS ARE ADDED
+  );
+  // ...
 };
 
 // @desc    Create a produce listing

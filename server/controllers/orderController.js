@@ -27,11 +27,11 @@ const createOrder = async (req, res) => {
     const createdOrder = await order.save();
 
     // Optionally: update produce stock quantities here
-    // for (const item of orderItems) {
-    //   await Produce.findByIdAndUpdate(item.produceId, {
-    //     $inc: { quantity: -item.qty },
-    //   });
-    // }
+    for (const item of orderItems) {
+      await Produce.findByIdAndUpdate(item.produceId, {
+        $inc: { quantity: -item.qty },
+      });
+     }
 
     res.status(201).json(createdOrder);
   } catch (error) {

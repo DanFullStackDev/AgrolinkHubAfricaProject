@@ -23,7 +23,7 @@ router.post(
   '/',
   protect,
   authorize('Farmer', 'Admin'),
-  validateRequest(produceSchema), // 3. Add middleware
+  //validateRequest(produceSchema), // 3. Add middleware
   upload.array('images', 5),
   createProduce
 );
