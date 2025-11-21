@@ -118,7 +118,7 @@ export function HomePage() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-6">Ready to support local agriculture?</h2>
           <Button asChild size="lg" variant="secondary">
-            <Link to="/browse" className="gap-2">
+            <Link to={user ? "/browse" : "/login"} className="gap-2">
               <ShoppingCart className="size-5" /> Start Shopping Now
             </Link>
           </Button>
