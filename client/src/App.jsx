@@ -13,6 +13,7 @@ import { CreateBlogPage } from './pages/Dashboard/CreateBlogPage';
 import { EditProducePage } from './pages/Dashboard/EditProducePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { HomePage } from './pages/HomePage'; // <--- ADDED THIS IMPORT
+import { MessagesPage } from './pages/MessagesPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
 import { Toaster } from '@/components/ui/sonner';
@@ -89,7 +90,7 @@ function App() {
             } 
           />
         </Route>
-
+            <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
         {/* Routes without Navbar/Footer */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />

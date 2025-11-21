@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
-import { PlusCircle, Package, DollarSign, Loader2, Trash2, Edit } from 'lucide-react';
+import { PlusCircle, Package, DollarSign, Loader2, Trash2, Edit, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -76,12 +76,23 @@ export function FarmerDashboard() {
     <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Farmer Dashboard</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Farmer Dashboard</h1>
+      
+      {/* 2. Add this Button Group */}
+      <div className="flex gap-3">
+        <Button asChild variant="outline">
+          <Link to="/messages">
+            <MessageSquare className="mr-2 size-4" /> Messages
+          </Link>
+        </Button>
+        
         <Button asChild>
-          <Link to="/produce/new"><PlusCircle className="mr-2 size-4" /> Add New Produce</Link>
+          <Link to="/produce/new">
+            <PlusCircle className="mr-2 size-4" /> Add New Produce
+          </Link>
         </Button>
       </div>
-
+    </div>
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>

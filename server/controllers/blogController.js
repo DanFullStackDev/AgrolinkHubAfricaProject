@@ -1,4 +1,5 @@
 import Blog from '../models/Blog.js';
+import Category from '../models/Category.js'; // <--- ADDED THIS IMPORT
 import mongoose from 'mongoose';
 
 // @desc    Fetch all blog posts
@@ -11,6 +12,7 @@ const getBlogs = async (req, res) => {
       .sort({ createdAt: -1 });
     res.json(blogs);
   } catch (error) {
+    console.error("Error in getBlogs:", error); // Log the actual error to terminal
     res.status(500).json({ message: error.message });
   }
 };
@@ -35,6 +37,7 @@ const getBlogById = async (req, res) => {
       res.status(404).json({ message: 'Blog post not found' });
     }
   } catch (error) {
+    console.error("Error in getBlogById:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -45,13 +48,16 @@ const getBlogById = async (req, res) => {
 const createBlog = async (req, res) => {
   try {
     const { title, content, categories } = req.body;
-const files = req.files || [];
+    
+    // Handle Image Uploads
+    const files = req.files || [];
     const images = files.map((file) => file.path || file.secure_url).filter(Boolean);
+
     const blog = new Blog({
       title,
       content,
       images,
-      categories,
+      categories, // Expecting ID or array of IDs
       authorId: req.user._id,
       authorName: req.user.name,
     });
@@ -87,9 +93,10 @@ const updateBlog = async (req, res) => {
     }
 
     const { title, content, images, categories } = req.body;
+    
     blog.title = title || blog.title;
     blog.content = content || blog.content;
-    blog.images = images || blog.images;
+    if (images) blog.images = images; // Only update images if provided
     blog.categories = categories || blog.categories;
 
     const updatedBlog = await blog.save();
@@ -136,30 +143,29 @@ const createBlogComment = async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
     return res.status(400).json({ message: 'Invalid Blog ID' });
   }
-  
+
   try {
     const { comment } = req.body;
-    if (!comment) {
-      return res.status(400).json({ message: 'Comment text is required' });
-    }
-
     const blog = await Blog.findById(req.params.id);
 
-    if (!blog) {
-      return res.status(404).json({ message: 'Blog post not found' });
+    if (blog) {
+      const newComment = {
+        name: req.user.name,
+        comment: comment,
+        userId: req.user._id, 
+        createdAt: new Date(), 
+      };
+
+      blog.comments.push(newComment);
+      await blog.save();
+
+      res.status(201).json({ message: 'Comment added' });
+    } else {
+      res.status(404).json({ message: 'Blog not found' });
     }
-
-    const newComment = {
-      userId: req.user._id,
-      name: req.user.name,
-      comment: comment,
-    };
-
-    blog.comments.push(newComment);
-    await blog.save();
-    res.status(201).json(newComment);
   } catch (error) {
-    res.status(400).json({ message: 'Comment creation failed', details: error.message });
+    console.error("Comment Error:", error);
+    res.status(500).json({ message: error.message });
   }
 };
 

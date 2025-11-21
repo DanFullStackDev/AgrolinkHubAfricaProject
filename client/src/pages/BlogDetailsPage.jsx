@@ -5,27 +5,37 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, User, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { CommentSection } from '../components/CommentSection'; // Import the new component
 
 export function BlogDetailsPage() {
   const { id } = useParams();
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchBlog = async () => {
-      try {
-        const response = await api.get(`/api/blogs/${id}`);
-        setBlog(response.data);
-      } catch (error) {
-        console.error('Error fetching blog:', error);
-        toast.error('Could not load article');
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Function to fetch blog data (reused for initial load and refreshing comments)
+  const fetchBlog = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
+    try {
+      const response = await api.get(`/api/blogs/${id}`);
+      setBlog(response.data);
+    } catch (error) {
+      console.error('Error fetching blog:', error);
+      toast.error('Could not load article');
+    } finally {
+      if (showLoading) setLoading(false);
+    }
+  };
 
+  // Initial Load
+  useEffect(() => {
     fetchBlog();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // Callback to refresh comments without showing full page loader
+  const refreshComments = () => {
+    fetchBlog(false);
+  };
 
   if (loading) {
     return (
@@ -89,13 +99,21 @@ export function BlogDetailsPage() {
         )}
 
         {/* Content */}
-        <div className="prose prose-lg dark:prose-invert max-w-none">
-          {/* Ideally use a markdown parser here, but for MVP simple text is fine */}
+        <div className="prose prose-lg dark:prose-invert max-w-none border-b pb-10">
           <p className="whitespace-pre-wrap leading-relaxed text-gray-700 dark:text-gray-300">
             {blog.content}
           </p>
         </div>
       </article>
+
+      {/* Comment Section */}
+      <div className="max-w-3xl mx-auto pb-20">
+        <CommentSection 
+          blogId={blog._id} 
+          comments={blog.comments || []} 
+          onCommentAdded={refreshComments} 
+        />
+      </div>
     </div>
   );
 }

@@ -12,18 +12,20 @@ import upload from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
-// Public routes
-router.get('/', getBlogs);
-router.get('/:id', getBlogById);
+// --- PUBLIC ROUTES (Anyone can see these) ---
+router.get('/', getBlogs); // Fetch all blogs
+router.get('/:id', getBlogById); // Fetch single blog
 
-// Private route for commenting
+// --- PROTECTED ROUTES (Must be logged in) ---
+
+// Commenting (Any logged-in user)
 router.post('/:id/comments', protect, createBlogComment);
 
-// Private/Expert & Admin routes
+// Expert & Admin Actions (Create, Update, Delete)
 router.post(
   '/',
   protect,
-  authorize('Expert', 'Admin'), // Allow Experts
+  authorize('Expert', 'Admin'),
   upload.array('images', 1),
   createBlog
 );
@@ -31,14 +33,14 @@ router.post(
 router.put(
   '/:id',
   protect,
-  authorize('Expert', 'Admin'), // Allow Experts
+  authorize('Expert', 'Admin'),
   updateBlog
 );
 
 router.delete(
   '/:id',
   protect,
-  authorize('Expert', 'Admin'), // Allow Experts
+  authorize('Expert', 'Admin'),
   deleteBlog
 );
 
