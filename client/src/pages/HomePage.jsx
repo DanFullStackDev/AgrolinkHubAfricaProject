@@ -2,8 +2,14 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ShoppingCart, Sprout, TrendingUp, Users } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export function HomePage() {
+  const { user } = useAuth();
+
+  // Debugging: Check the console to see if user is detected
+  console.log("Current User in HomePage:", user);
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -17,18 +23,49 @@ export function HomePage() {
             Directly connecting smallholder farmers with buyers. 
             Better prices, fresher produce, and zero hunger.
           </p>
+          
+          {/* DYNAMIC BUTTONS SECTION */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="text-lg px-8 bg-green-500 hover:bg-green-600 text-white border-none">
-              <Link to="/browse">Buy Produce</Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="text-lg px-8 bg-transparent text-white border-white hover:bg-white hover:text-green-900">
-              <Link to="/register">Join as Farmer</Link>
-            </Button>
+            {!user ? (
+              // --- OPTION A: NOT LOGGED IN ---
+              <>
+                <Button asChild size="lg" className="text-lg px-8 bg-green-500 hover:bg-green-600 text-white border-none">
+                  <Link to="/login">Buy Produce</Link>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="text-lg px-8 bg-transparent text-white border-white hover:bg-white hover:text-green-900">
+                  <Link to="/register">Join as Farmer</Link>
+                </Button>
+              </>
+            ) : (
+              // --- OPTION B: LOGGED IN ---
+              <>
+                {user.role === 'Farmer' && (
+                  <Button asChild size="lg" className="text-lg px-8 bg-green-500 hover:bg-green-600 text-white border-none">
+                    <Link to="/dashboard">Visit My Farmer Dashboard</Link>
+                  </Button>
+                )}
+                {user.role === 'Expert' && (
+                  <Button asChild size="lg" className="text-lg px-8 bg-blue-500 hover:bg-blue-600 text-white border-none">
+                    <Link to="/dashboard">Visit My Expert Dashboard</Link>
+                  </Button>
+                )}
+                {user.role === 'Buyer' && (
+                  <Button asChild size="lg" className="text-lg px-8 bg-green-500 hover:bg-green-600 text-white border-none">
+                    <Link to="/browse">Explore Best Produce</Link>
+                  </Button>
+                )}
+                {user.role === 'Admin' && (
+                  <Button asChild size="lg" className="text-lg px-8 bg-purple-600 hover:bg-purple-700 text-white border-none">
+                    <Link to="/dashboard">Admin Panel</Link>
+                  </Button>
+                )}
+              </>
+            )}
           </div>
         </div>
       </section>
 
-      {/* Impact Stats (SDG Alignment) */}
+      {/* Impact Stats */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -76,7 +113,7 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Call to Action */}
+      {/* Call to Action Footer */}
       <section className="py-20 bg-slate-900 text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-6">Ready to support local agriculture?</h2>

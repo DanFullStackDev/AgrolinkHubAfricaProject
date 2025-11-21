@@ -1,15 +1,19 @@
 import Produce from '../models/Produce.js';
 import mongoose from 'mongoose';
 
-// @desc    Fetch all produce
+// @desc    Fetch all produce with Search, Filter & Pagination
 // @route   GET /api/produce
 // @access  Public
 const getProduce = async (req, res) => {
   try {
-    const { keyword, category, location } = req.query;
-    let query = {};
+    // 1. Destructure query params
+    const { keyword, category, pageNumber, location } = req.query;
+    let query = {
+      status: 'Available' // Default: only show available items
+    };
 
-    // Search by Title or Description
+    // 2. Build the Search Query
+    // If a keyword exists, search title OR description using regex
     if (keyword) {
       query.$or = [
         { title: { $regex: keyword, $options: 'i' } },
@@ -18,16 +22,37 @@ const getProduce = async (req, res) => {
     }
 
     // Filter by Category
-    if (category) query.category = category;
+    if (category && category !== 'All') {
+      query.category = category;
+    }
 
     // Filter by Location
-    if (location) query.location = { $regex: location, $options: 'i' };
+    if (location) {
+      query.location = { $regex: location, $options: 'i' };
+    }
 
+    // 3. Pagination Logic
+    const pageSize = 8; // Number of items per page
+    const page = Number(pageNumber) || 1;
+    
+    // Count total matching documents for pagination math
+    const count = await Produce.countDocuments(query);
+
+    // 4. Execute Query
     const produce = await Produce.find(query)
-      .populate('farmerId', 'name location')
-      .sort({ createdAt: -1 });
-      
-    res.json(produce);
+      .populate('farmerId', 'name location rating numReviews') // Include ratings for the card view
+      .sort({ createdAt: -1 }) // Newest first
+      .limit(pageSize)
+      .skip(pageSize * (page - 1));
+
+    // 5. Send Response with Pagination Data
+    res.json({ 
+      produce, 
+      page, 
+      pages: Math.ceil(count / pageSize), 
+      total: count 
+    });
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -37,12 +62,24 @@ const getProduce = async (req, res) => {
 // @route   GET /api/produce/:id
 // @access  Public
 const getProduceById = async (req, res) => {
-  // ... existing validation ...
-  const produce = await Produce.findById(req.params.id).populate(
-    'farmerId',
-    'name location rating numReviews' // <--- MAKE SURE THESE FIELDS ARE ADDED
-  );
-  // ...
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).json({ message: 'Invalid Produce ID' });
+  }
+
+  try {
+    const produce = await Produce.findById(req.params.id).populate(
+      'farmerId',
+      'name location rating numReviews' // Critical for displaying stars on Details Page
+    );
+
+    if (produce) {
+      res.json(produce);
+    } else {
+      res.status(404).json({ message: 'Produce not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 // @desc    Create a produce listing
@@ -50,7 +87,6 @@ const getProduceById = async (req, res) => {
 // @access  Private/Farmer
 const createProduce = async (req, res) => {
   try {
-    // Data (except images) now comes from req.body
     const {
       title,
       description,
@@ -65,7 +101,6 @@ const createProduce = async (req, res) => {
     const files = req.files || [];
     const images = files.map((file) => file.path || file.location || file.secure_url).filter(Boolean);
 
-    // Basic validation (since Joi is removed from the route)
     if (!title || !description || !price || !quantity || !unit || !category || !location) {
       return res.status(400).json({ message: 'All fields are required.' });
     }
@@ -77,7 +112,7 @@ const createProduce = async (req, res) => {
       farmerId: req.user._id,
       title,
       description,
-      images, // Save the Cloudinary URLs
+      images,
       price,
       quantity,
       unit,
@@ -161,7 +196,7 @@ const deleteProduce = async (req, res) => {
       return res.status(401).json({ message: 'Not authorized' });
     }
 
-    await produce.deleteOne(); // Use .deleteOne() on the document
+    await produce.deleteOne();
     res.json({ message: 'Produce removed' });
   } catch (error) {
     res.status(500).json({ message: error.message });

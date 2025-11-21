@@ -34,15 +34,18 @@ export function FarmerDashboard() {
       // Fetch My Produce
       const produceRes = await api.get('/api/produce'); 
       
-      // Filter client-side for current user
+      // --- FIX START ---
+      // The API now returns an object { produce: [], page: 1, ... }
+      // So we access .produce to get the array
+      const allProduce = produceRes.data.produce || []; 
+      
       const user = JSON.parse(localStorage.getItem('user'));
       if (user) {
-        const myItems = produceRes.data.filter(item => 
+        const myItems = allProduce.filter(item => 
           (item.farmerId._id === user._id) || (item.farmerId === user._id)
         );
         setMyProduce(myItems);
       }
-
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
       toast.error("Failed to load dashboard data");

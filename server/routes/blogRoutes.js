@@ -8,26 +8,38 @@ import {
   createBlogComment,
 } from '../controllers/blogController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
-import upload from '../middleware/uploadMiddleware.js'; // Import Multer
+import upload from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
-// ... existing public routes ...
+// Public routes
 router.get('/', getBlogs);
 router.get('/:id', getBlogById);
+
+// Private route for commenting
 router.post('/:id/comments', protect, createBlogComment);
 
 // Private/Expert & Admin routes
 router.post(
   '/',
   protect,
-  authorize('Expert', 'Admin'),
-  upload.array('images', 1), // Add this line!
+  authorize('Expert', 'Admin'), // Allow Experts
+  upload.array('images', 1),
   createBlog
 );
 
-// ... existing put/delete routes ...
-router.put('/:id', protect, authorize('Expert', 'Admin'), updateBlog);
-router.delete('/:id', protect, authorize('Expert', 'Admin'), deleteBlog);
+router.put(
+  '/:id',
+  protect,
+  authorize('Expert', 'Admin'), // Allow Experts
+  updateBlog
+);
+
+router.delete(
+  '/:id',
+  protect,
+  authorize('Expert', 'Admin'), // Allow Experts
+  deleteBlog
+);
 
 export default router;
